@@ -2,10 +2,17 @@ import express from "express";
 import cors from "cors";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, "public")));
 
 const PORT = process.env.PORT || 3000;
 const RESPONSES_FILE = path.join(process.cwd(), "responses.json");
@@ -49,7 +56,6 @@ app.post("/submit-answer", (req, res) => {
 
   try {
     saveResponse(entry);
-    // Send back a random validation phrase
     const randomValidation = validationPhrases[Math.floor(Math.random() * validationPhrases.length)];
     res.json({ validation: randomValidation });
   } catch (err) {
@@ -58,8 +64,10 @@ app.post("/submit-answer", (req, res) => {
   }
 });
 
-// Serve frontend static files (optional if hosting separately)
-app.use(express.static("public"));
+// Fallback route to serve index.html on root
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
